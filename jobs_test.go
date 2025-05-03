@@ -23,7 +23,7 @@ func TestGetJobsSuccess(t *testing.T) {
 
 	defer gock.Off()
 
-	var jobsResponseMock JobsResponse
+	var jobsResponseMock GetJobsResponse
 	if err := gofakeit.Struct(&jobsResponseMock); err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +62,7 @@ func TestGetJobsSuccessWithQueryParams(t *testing.T) {
 
 	defer gock.Off()
 
-	var jobsResponseMock JobsResponse
+	var jobsResponseMock GetJobsResponse
 	if err := gofakeit.Struct(&jobsResponseMock); err != nil {
 		t.Fatal(err)
 	}
@@ -110,7 +110,7 @@ func TestGetJobsSuccessWithQueryParamsOtherId(t *testing.T) {
 
 	defer gock.Off()
 
-	var jobsResponseMock JobsResponse
+	var jobsResponseMock GetJobsResponse
 	if err := gofakeit.Struct(&jobsResponseMock); err != nil {
 		t.Fatal(err)
 	}
@@ -158,7 +158,7 @@ func TestGetJobsErrorStatusCode(t *testing.T) {
 
 	defer gock.Off()
 
-	var jobsResponseMock JobsResponse
+	var jobsResponseMock GetJobsResponse
 	if err := gofakeit.Struct(&jobsResponseMock); err != nil {
 		t.Fatal(err)
 	}

@@ -12,7 +12,7 @@ import (
 
 const jobsPath = "jobs"
 
-type JobsResponse struct {
+type GetJobsResponse struct {
 	Jobs []struct {
 		ID     string `json:"id,omitempty"`
 		Name   string `json:"name,omitempty"`
@@ -61,12 +61,39 @@ type GetJobsRequest struct {
 	Next   string   `url:"next"`
 }
 
-type JobsResponseWithStatus struct {
-	Response JobsResponse
+type GetJobsResponseWithStatus struct {
+	Response GetJobsResponse
 	Status   int
 }
 
-func (c *Client) GetJobs(ctx context.Context, getJobsRequest *GetJobsRequest) (*JobsResponseWithStatus, error) {
+type CreateJobRequest struct {
+	Name     string            `json:"name,omitempty"`
+	Metadata map[string]string `json:"metadata,omitempty"`
+	Shots    uint              `json:"shots,omitempty"`
+	Target   string            `json:"target,omitempty"`
+	Noise    struct {
+		Model string `json:"model,omitempty"`
+		Seed  int    `json:"seed,omitempty"`
+	} `json:"noise,omitempty"`
+	Input struct {
+		Circuit struct {
+			Gate     string `json:"gate,omitempty"`
+			Target   uint   `json:"target,omitempty"`
+			Targets  []uint `json:"targets,omitempty`
+			Control  uint   `json:"control,omitempty"`
+			Controls []uint `json:"controls,omitempty"`
+			Rotation int    `json:"rotation,omitempty"`
+		} `json:"circuit,omitempty"`
+		Qubits  uint   `json:"qubits"`
+		Format  string `json:"format,omitempty"`
+		Gateset string `json:"gateset,omitempty"`
+	} `json:"input,omitempty"`
+	ErrorMitigation struct {
+		Ddbias bool `json:"debias,omitempty"`
+	} `json:"error_mitigation,omitempty"`
+}
+
+func (c *Client) GetJobs(ctx context.Context, getJobsRequest *GetJobsRequest) (*GetJobsResponseWithStatus, error) {
 	url := c.makeURL(jobsPath)
 
 	v, err := query.Values(&getJobsRequest)
@@ -92,13 +119,18 @@ func (c *Client) GetJobs(ctx context.Context, getJobsRequest *GetJobsRequest) (*
 		return nil, err
 	}
 
-	var jobsResponse JobsResponse
+	var jobsResponse GetJobsResponse
 	if err := json.Unmarshal(body, &jobsResponse); err != nil {
 		return nil, err
 	}
 
-	return &JobsResponseWithStatus{
+	return &GetJobsResponseWithStatus{
 		Response: jobsResponse,
 		Status:   res.StatusCode,
 	}, nil
+}
+
+func (c *Client) CreateJob(ctx context.Context, createJobRequest *CreateJobRequest) error {
+	panic("finish me")
+	return nil
 }
