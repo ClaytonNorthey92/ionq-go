@@ -35,7 +35,7 @@ jobs:
           go install ./cmd/goreportcard-cli
           cd ../ionq-go
           goreportcard-cli
-          if [ "$(goreportcard-cli -j | jq '.GradeFromPercentage')" != "A+" ]; then
+          if [ "$(goreportcard-cli -j | jq -r '.GradeFromPercentage')" != "A+" ]; then
             exit 1
           fi
 
