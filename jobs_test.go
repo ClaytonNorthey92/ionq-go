@@ -132,7 +132,6 @@ func TestGetJobsSuccessWithQueryParamsOtherId(t *testing.T) {
 		Reply(200).
 		JSON(&jobsResponseMock)
 
-	client := NewClient(myFakeEndpoint, myFakeAPIKey)
 	jobsResponseWithStatus, err := client.GetJobs(ctx, &GetJobsRequest{
 		IDs:    []string{"cb6d30f7-63c2-4860-9f0e-ad15cd4e2379", "e759e916-af08-4716-9b3d-15bd1bf65ffe"},
 		Status: "completed",
