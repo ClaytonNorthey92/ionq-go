@@ -26,4 +26,18 @@ jobs:
           fi
       - name: Run Tests
         run: go test -v ./...
+      - name: Must be A+
+        run: |
+          cd ..
+          git clone https://github.com/gojp/goreportcard.git
+          cd goreportcard
+          make install
+          go install ./cmd/goreportcard-cli
+          cd ../ionq-go
+          goreportcard-cli
+          if [ "$(goreportcard-cli -j | jq '.GradeFromPercentage')" = "A+" ]; then
+          else
+            exit 1
+          fi
+
       
