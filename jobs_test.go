@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -35,7 +36,7 @@ func TestGetJobsSuccess(t *testing.T) {
 	}
 	t.Logf("will mock response as: %s", mockJson)
 
-	gock.New(myFakeEndpoint).
+	newGock().
 		Get(jobsPath).
 		Reply(200).
 		JSON(&jobsResponseMock)
@@ -74,7 +75,7 @@ func TestGetJobsSuccessWithQueryParams(t *testing.T) {
 	}
 	t.Logf("will mock response as: %s", mockJson)
 
-	gock.New(myFakeEndpoint).
+	newGock().
 		Get(jobsPath).
 		MatchParams(map[string]string{
 			"id":     "cb6d30f7-63c2-4860-9f0e-ad15cd4e2379",
@@ -122,7 +123,7 @@ func TestGetJobsSuccessWithQueryParamsOtherId(t *testing.T) {
 	}
 	t.Logf("will mock response as: %s", mockJson)
 
-	gock.New(myFakeEndpoint).
+	newGock().
 		Get(jobsPath).
 		MatchParams(map[string]string{
 			"id":     "e759e916-af08-4716-9b3d-15bd1bf65ffe",
@@ -170,7 +171,7 @@ func TestGetJobsErrorStatusCode(t *testing.T) {
 	}
 	t.Logf("will mock response as: %s", mockJson)
 
-	gock.New(myFakeEndpoint).
+	newGock().
 		Get(jobsPath).
 		Reply(400).
 		JSON(&jobsResponseMock)
@@ -207,7 +208,7 @@ func TestCreateJobsSuccess(t *testing.T) {
 	}
 	t.Logf("will mock response as: %s", mockJson)
 
-	gock.New(myFakeEndpoint).
+	newGock().
 		Post(jobsPath).
 		Reply(200).
 		JSON(&createJobResponse)
@@ -244,7 +245,7 @@ func TestCreateJobsFailure(t *testing.T) {
 	}
 	t.Logf("will mock response as: %s", mockJson)
 
-	gock.New(myFakeEndpoint).
+	newGock().
 		Post(jobsPath).
 		Reply(400).
 		JSON(&createJobResponse)
@@ -258,4 +259,10 @@ func TestCreateJobsFailure(t *testing.T) {
 	if !errors.Is(err, ErrRequestError) {
 		t.Fatalf("unexpected error: %s", err)
 	}
+}
+
+func newGock() *gock.Request {
+	return gock.New(myFakeEndpoint).
+		MatchHeader("Authorization", fmt.Sprintf("apiKey %s", myFakeAPIKey)).
+		MatchHeader("Content-Type", "application/json")
 }

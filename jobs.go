@@ -109,6 +109,11 @@ type CreateJobResponseWithStatus struct {
 	Status   int
 }
 
+func (c *Client) setHeaders(req *http.Request) {
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("apiKey %s", c.apiKey))
+}
+
 func (c *Client) GetJobs(ctx context.Context, getJobsRequest *GetJobsRequest) (*GetJobsResponseWithStatus, error) {
 	url := c.makeURL(jobsPath)
 
@@ -123,6 +128,8 @@ func (c *Client) GetJobs(ctx context.Context, getJobsRequest *GetJobsRequest) (*
 	if err != nil {
 		return nil, err
 	}
+
+	c.setHeaders(req)
 
 	res, err := c.client.Do(req)
 	if err != nil {
@@ -158,6 +165,8 @@ func (c *Client) CreateJob(ctx context.Context, createJobRequest *CreateJobReque
 	if err != nil {
 		return nil, err
 	}
+
+	c.setHeaders(req)
 
 	res, err := c.client.Do(req)
 	if err != nil {
