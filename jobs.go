@@ -68,6 +68,23 @@ type GetJobRequest struct {
 	ID string `url:"id"`
 }
 
+type GetJobOutputRequest GetJobRequest
+
+// these have the same structure
+type DeleteJobRequest GetJobRequest
+
+type DeleteJobResponseWithStatus struct {
+	Response DeleteJobResponse
+	Status   int
+}
+
+type GetJobResponse Job
+
+type GetJobResponseWithStatus struct {
+	Response GetJobResponse
+	Status   int
+}
+
 type GetJobsResponseWithStatus struct {
 	Response GetJobsResponse
 	Status   int
@@ -119,8 +136,20 @@ type DeleteManyJobsResponse struct {
 	Status string   `json:"status"`
 }
 
+type DeleteJobResponse struct {
+	ID     string `json:"id"`
+	Status string `json:"status"`
+}
+
 type DeleteManyJobsResponseWithStatus struct {
 	Response DeleteManyJobsResponse
+	Status   int
+}
+
+type GetJobOutputResponse map[string]map[string]float32
+
+type GetJobOutputResponseWithStatus struct {
+	Response GetJobOutputResponse
 	Status   int
 }
 
@@ -244,6 +273,100 @@ func (c *Client) DeleteManyJobs(ctx context.Context, deleteManyJobsRequest *Dele
 	return &deleteManyJobsResponseWithStatus, nil
 }
 
-func (c *Client) GetJob(ctx context.Context, getJobRequest *GetJobRequest) {
-	panic("finish me")
+func (c *Client) GetJob(ctx context.Context, getJobRequest *GetJobRequest) (*GetJobResponseWithStatus, error) {
+	url := c.makeURL(fmt.Sprintf("%s/%s", jobsPath, getJobRequest.ID))
+
+	// TODO: add "include" and "exclude" query params
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
+	if err != nil {
+		return nil, err
+	}
+
+	c.setHeaders(req)
+
+	res, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var getJobResponse GetJobResponse
+	if err := json.Unmarshal(body, &getJobResponse); err != nil {
+		return nil, err
+	}
+
+	return &GetJobResponseWithStatus{
+		Response: getJobResponse,
+		Status:   res.StatusCode,
+	}, nil
+}
+
+func (c *Client) GetJobOutput(ctx context.Context, getJobOutputRequest *GetJobOutputRequest) (*GetJobOutputResponseWithStatus, error) {
+	url := c.makeURL(fmt.Sprintf("%s/%s/output", jobsPath, getJobOutputRequest.ID))
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
+	if err != nil {
+		return nil, err
+	}
+
+	c.setHeaders(req)
+
+	res, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var getJobOutputResponse GetJobOutputResponse
+	if err := json.Unmarshal(body, &getJobOutputResponse); err != nil {
+		return nil, err
+	}
+
+	return &GetJobOutputResponseWithStatus{
+		Response: getJobOutputResponse,
+		Status:   res.StatusCode,
+	}, nil
+}
+
+func (c *Client) DeleteJob(ctx context.Context, deleteJobRequest *DeleteJobRequest) (*DeleteJobResponseWithStatus, error) {
+	url := c.makeURL(fmt.Sprintf("%s/%s", jobsPath, deleteJobRequest.ID))
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, http.NoBody)
+	if err != nil {
+		return nil, err
+	}
+
+	c.setHeaders(req)
+
+	res, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var deleteJobResponse DeleteJobResponse
+	if err := json.Unmarshal(body, &deleteJobResponse); err != nil {
+		return nil, err
+	}
+
+	return &DeleteJobResponseWithStatus{
+		Response: deleteJobResponse,
+		Status:   res.StatusCode,
+	}, nil
 }

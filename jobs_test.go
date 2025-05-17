@@ -335,3 +335,197 @@ func newGock() *gock.Request {
 		MatchHeader("Authorization", fmt.Sprintf("apiKey %s", myFakeAPIKey)).
 		MatchHeader("Content-Type", "application/json")
 }
+
+func TestGetJobSuccess(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	defer gock.Off()
+
+	var jobResponseMock GetJobResponse
+	if err := gofakeit.Struct(&jobResponseMock); err != nil {
+		t.Fatal(err)
+	}
+
+	mockJson, err := json.Marshal(&jobResponseMock)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("will mock response as: %s", mockJson)
+
+	newGock().
+		Get(fmt.Sprintf("%s/some-id", jobsPath)).
+		Reply(200).
+		JSON(&jobResponseMock)
+
+	client := NewClient(myFakeEndpoint, myFakeAPIKey)
+	jobResponseWithStatus, err := client.GetJob(ctx, &GetJobRequest{
+		ID: "some-id",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if jobResponseWithStatus.Status != http.StatusOK {
+		t.Fatalf("unexpected status: %d", jobResponseWithStatus.Status)
+	}
+
+	if diff := deep.Equal(jobResponseMock, jobResponseWithStatus.Response); len(diff) > 0 {
+		t.Fatalf("unexpected diff: %s", diff)
+	}
+}
+
+func TestGetJobFailure(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	defer gock.Off()
+
+	var jobResponseMock GetJobResponse
+	if err := gofakeit.Struct(&jobResponseMock); err != nil {
+		t.Fatal(err)
+	}
+
+	mockJson, err := json.Marshal(&jobResponseMock)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("will mock response as: %s", mockJson)
+
+	newGock().
+		Get(fmt.Sprintf("%s/some-id", jobsPath)).
+		Reply(400).
+		JSON(&jobResponseMock)
+
+	client := NewClient(myFakeEndpoint, myFakeAPIKey)
+	jobResponseWithStatus, err := client.GetJob(ctx, &GetJobRequest{
+		ID: "some-id",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if jobResponseWithStatus.Status != 400 {
+		t.Fatalf("unexpected status %d", jobResponseWithStatus.Status)
+	}
+}
+
+func TestDeleteJobSuccess(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	defer gock.Off()
+
+	var jobResponseMock DeleteJobResponse
+	if err := gofakeit.Struct(&jobResponseMock); err != nil {
+		t.Fatal(err)
+	}
+
+	mockJson, err := json.Marshal(&jobResponseMock)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("will mock response as: %s", mockJson)
+
+	newGock().
+		Delete(fmt.Sprintf("%s/some-id", jobsPath)).
+		Reply(200).
+		JSON(&jobResponseMock)
+
+	client := NewClient(myFakeEndpoint, myFakeAPIKey)
+	jobResponseWithStatus, err := client.DeleteJob(ctx, &DeleteJobRequest{
+		ID: "some-id",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if jobResponseWithStatus.Status != http.StatusOK {
+		t.Fatalf("unexpected status: %d", jobResponseWithStatus.Status)
+	}
+
+	if diff := deep.Equal(jobResponseMock, jobResponseWithStatus.Response); len(diff) > 0 {
+		t.Fatalf("unexpected diff: %s", diff)
+	}
+}
+
+func TestDeleteJobFailure(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	defer gock.Off()
+
+	var jobResponseMock DeleteJobResponse
+	if err := gofakeit.Struct(&jobResponseMock); err != nil {
+		t.Fatal(err)
+	}
+
+	mockJson, err := json.Marshal(&jobResponseMock)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("will mock response as: %s", mockJson)
+
+	newGock().
+		Delete(fmt.Sprintf("%s/some-id", jobsPath)).
+		Reply(400).
+		JSON(&jobResponseMock)
+
+	client := NewClient(myFakeEndpoint, myFakeAPIKey)
+	jobResponseWithStatus, err := client.DeleteJob(ctx, &DeleteJobRequest{
+		ID: "some-id",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if jobResponseWithStatus.Status != 400 {
+		t.Fatalf("unexpected status %d", jobResponseWithStatus.Status)
+	}
+}
+
+func TestGetJobOutputSuccess(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	defer gock.Off()
+
+	jobResponseMock := GetJobOutputResponse{
+		"someid": map[string]float32{
+			"0": 0.8,
+			"1": 0.2,
+		},
+		"someotherid": map[string]float32{
+			"0": 0.2,
+			"1": 0.4,
+			"2": 0.4,
+		},
+	}
+
+	mockJson, err := json.Marshal(&jobResponseMock)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("will mock response as: %s", mockJson)
+
+	newGock().
+		Get(fmt.Sprintf("%s/some-id/output", jobsPath)).
+		Reply(200).
+		JSON(&jobResponseMock)
+
+	client := NewClient(myFakeEndpoint, myFakeAPIKey)
+	jobResponseWithStatus, err := client.GetJobOutput(ctx, &GetJobOutputRequest{
+		ID: "some-id",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if jobResponseWithStatus.Status != http.StatusOK {
+		t.Fatalf("unexpected status: %d", jobResponseWithStatus.Status)
+	}
+
+	if diff := deep.Equal(jobResponseMock, jobResponseWithStatus.Response); len(diff) > 0 {
+		t.Fatalf("unexpected diff: %s", diff)
+	}
+}
