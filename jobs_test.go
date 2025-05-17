@@ -3,6 +3,7 @@ package ionq
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"testing"
 	"time"
@@ -186,5 +187,75 @@ func TestGetJobsErrorStatusCode(t *testing.T) {
 
 	if diff := deep.Equal(jobsResponseMock, jobsResponseWithStatus.Response); len(diff) > 0 {
 		t.Fatalf("unexpected diff: %s", diff)
+	}
+}
+
+func TestCreateJobsSuccess(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	defer gock.Off()
+
+	var createJobResponse CreateJobResponse
+	if err := gofakeit.Struct(&createJobResponse); err != nil {
+		t.Fatal(err)
+	}
+
+	mockJson, err := json.Marshal(&createJobResponse)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("will mock response as: %s", mockJson)
+
+	gock.New(myFakeEndpoint).
+		Post(jobsPath).
+		Reply(200).
+		JSON(&createJobResponse)
+
+	client := NewClient(myFakeEndpoint, myFakeAPIKey)
+	createJobWithStatus, err := client.CreateJob(ctx, &CreateJobRequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if createJobWithStatus.Status != http.StatusOK {
+		t.Fatalf("unexpected status: %d", createJobWithStatus.Status)
+	}
+
+	if diff := deep.Equal(createJobResponse, createJobWithStatus.Response); len(diff) > 0 {
+		t.Fatalf("unexpected diff: %s", diff)
+	}
+}
+
+func TestCreateJobsFailure(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	defer gock.Off()
+
+	var createJobResponse CreateJobResponse
+	if err := gofakeit.Struct(&createJobResponse); err != nil {
+		t.Fatal(err)
+	}
+
+	mockJson, err := json.Marshal(&createJobResponse)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("will mock response as: %s", mockJson)
+
+	gock.New(myFakeEndpoint).
+		Post(jobsPath).
+		Reply(400).
+		JSON(&createJobResponse)
+
+	client := NewClient(myFakeEndpoint, myFakeAPIKey)
+	_, err = client.CreateJob(ctx, &CreateJobRequest{})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+
+	if !errors.Is(err, ErrRequestError) {
+		t.Fatalf("unexpected error: %s", err)
 	}
 }

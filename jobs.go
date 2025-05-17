@@ -1,8 +1,10 @@
 package ionq
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,6 +13,10 @@ import (
 )
 
 const jobsPath = "jobs"
+
+var (
+	ErrRequestError = errors.New("error making request")
+)
 
 type GetJobsResponse struct {
 	Jobs []struct {
@@ -89,8 +95,18 @@ type CreateJobRequest struct {
 		Gateset string `json:"gateset,omitempty"`
 	} `json:"input,omitempty"`
 	ErrorMitigation struct {
-		Ddbias bool `json:"debias,omitempty"`
+		Debias bool `json:"debias,omitempty"`
 	} `json:"error_mitigation,omitempty"`
+}
+
+type CreateJobResponse struct {
+	ID     string `json:"id"`
+	Status string `json:"status"`
+}
+
+type CreateJobResponseWithStatus struct {
+	Response CreateJobResponse
+	Status   int
 }
 
 func (c *Client) GetJobs(ctx context.Context, getJobsRequest *GetJobsRequest) (*GetJobsResponseWithStatus, error) {
@@ -130,7 +146,42 @@ func (c *Client) GetJobs(ctx context.Context, getJobsRequest *GetJobsRequest) (*
 	}, nil
 }
 
-func (c *Client) CreateJob(ctx context.Context, createJobRequest *CreateJobRequest) error {
-	panic("finish me")
-	return nil
+func (c *Client) CreateJob(ctx context.Context, createJobRequest *CreateJobRequest) (*CreateJobResponseWithStatus, error) {
+	url := c.makeURL(jobsPath)
+
+	reqBody, err := json.Marshal(createJobRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(reqBody))
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var createJobResponseWithStatus CreateJobResponseWithStatus
+
+	if err := json.Unmarshal(body, &createJobResponseWithStatus.Response); err != nil {
+		return nil, err
+	}
+
+	if res.StatusCode == http.StatusOK {
+		createJobResponseWithStatus.Status = res.StatusCode
+	} else {
+		return nil, fmt.Errorf("%w: received non-ok status code %d: %s", ErrRequestError, res.StatusCode, string(body))
+	}
+
+	return &createJobResponseWithStatus, nil
 }
