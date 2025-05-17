@@ -3,7 +3,6 @@ package ionq
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"testing"
@@ -251,8 +250,14 @@ func TestCreateJobsFailure(t *testing.T) {
 		JSON(&createJobResponse)
 
 	client := NewClient(myFakeEndpoint, myFakeAPIKey)
-	_, err = client.CreateJob(ctx, &CreateJobRequest{})
-	expectRequestError(t, err)
+	createJobResponseWithStatus, err := client.CreateJob(ctx, &CreateJobRequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if createJobResponseWithStatus.Status != 400 {
+		t.Fatalf("unexpected status code %d", createJobResponseWithStatus.Status)
+	}
 }
 
 func TestDeleteManyJobsSuccess(t *testing.T) {
@@ -315,22 +320,18 @@ func TestDeleteManyJobsFailure(t *testing.T) {
 		JSON(&deleteManyJobsResponse)
 
 	client := NewClient(myFakeEndpoint, myFakeAPIKey)
-	_, err = client.DeleteManyJobs(ctx, &DeleteManyJobsRequest{})
-	expectRequestError(t, err)
+	deleteManyJobsResponseWithStatus, err := client.DeleteManyJobs(ctx, &DeleteManyJobsRequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if deleteManyJobsResponseWithStatus.Status != 400 {
+		t.Fatalf("unexpected response code: %d", deleteManyJobsResponseWithStatus.Status)
+	}
 }
 
 func newGock() *gock.Request {
 	return gock.New(myFakeEndpoint).
 		MatchHeader("Authorization", fmt.Sprintf("apiKey %s", myFakeAPIKey)).
 		MatchHeader("Content-Type", "application/json")
-}
-
-func expectRequestError(t *testing.T, err error) {
-	if err == nil {
-		t.Fatal("expected error")
-	}
-
-	if !errors.Is(err, ErrRequestError) {
-		t.Fatalf("unexpected error: %s", err)
-	}
 }

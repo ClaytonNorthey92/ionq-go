@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -14,49 +13,47 @@ import (
 
 const jobsPath = "jobs"
 
-var (
-	ErrRequestError = errors.New("error making request")
-)
+type Job struct {
+	ID     string `json:"id,omitempty"`
+	Name   string `json:"name,omitempty"`
+	Status string `json:"status,omitempty"`
+	Target string `json:"target,omitempty"`
+	Noise  struct {
+		Model string `json:"model,omitempty"`
+		Seed  int    `json:"seed,omitempty"`
+	} `json:"noise,omitempty"`
+	Metadata struct {
+		CustomKey string `json:"custom_key,omitempty"`
+	} `json:"metadata,omitempty"`
+	Shots           int `json:"shots,omitempty"`
+	ErrorMitigation struct {
+		Debias bool `json:"debias,omitempty"`
+	} `json:"error_mitigation,omitempty"`
+	GateCounts struct {
+		OneQ int `json:"1q,omitempty"`
+		TwoQ int `json:"2q,omitempty"`
+	} `json:"gate_counts,omitempty"`
+	Qubits                 int      `json:"qubits,omitempty"`
+	CostUsd                float64  `json:"cost_usd,omitempty"`
+	Request                int      `json:"request,omitempty"`
+	Start                  int      `json:"start,omitempty"`
+	Response               int      `json:"response,omitempty"`
+	ExecutionTime          int      `json:"execution_time,omitempty"`
+	PredictedExecutionTime int      `json:"predicted_execution_time,omitempty"`
+	Children               []string `json:"children,omitempty"`
+	ResultsURL             string   `json:"results_url,omitempty"`
+	Failure                struct {
+		Error string `json:"error,omitempty"`
+		Code  string `json:"code,omitempty"`
+	} `json:"failure,omitempty"`
+	Warning struct {
+		Messages []string `json:"messages,omitempty"`
+	} `json:"warning,omitempty"`
+	Circuits int `json:"circuits,omitempty"`
+}
 
 type GetJobsResponse struct {
-	Jobs []struct {
-		ID     string `json:"id,omitempty"`
-		Name   string `json:"name,omitempty"`
-		Status string `json:"status,omitempty"`
-		Target string `json:"target,omitempty"`
-		Noise  struct {
-			Model string `json:"model,omitempty"`
-			Seed  int    `json:"seed,omitempty"`
-		} `json:"noise,omitempty"`
-		Metadata struct {
-			CustomKey string `json:"custom_key,omitempty"`
-		} `json:"metadata,omitempty"`
-		Shots           int `json:"shots,omitempty"`
-		ErrorMitigation struct {
-			Debias bool `json:"debias,omitempty"`
-		} `json:"error_mitigation,omitempty"`
-		GateCounts struct {
-			OneQ int `json:"1q,omitempty"`
-			TwoQ int `json:"2q,omitempty"`
-		} `json:"gate_counts,omitempty"`
-		Qubits                 int      `json:"qubits,omitempty"`
-		CostUsd                float64  `json:"cost_usd,omitempty"`
-		Request                int      `json:"request,omitempty"`
-		Start                  int      `json:"start,omitempty"`
-		Response               int      `json:"response,omitempty"`
-		ExecutionTime          int      `json:"execution_time,omitempty"`
-		PredictedExecutionTime int      `json:"predicted_execution_time,omitempty"`
-		Children               []string `json:"children,omitempty"`
-		ResultsURL             string   `json:"results_url,omitempty"`
-		Failure                struct {
-			Error string `json:"error,omitempty"`
-			Code  string `json:"code,omitempty"`
-		} `json:"failure,omitempty"`
-		Warning struct {
-			Messages []string `json:"messages,omitempty"`
-		} `json:"warning,omitempty"`
-		Circuits int `json:"circuits,omitempty"`
-	} `json:"jobs,omitempty"`
+	Jobs []Job  `json:"jobs,omitempty"`
 	Next string `json:"next,omitempty"`
 }
 
@@ -65,6 +62,10 @@ type GetJobsRequest struct {
 	Status string   `url:"status"`
 	Limit  uint     `url:"limit"`
 	Next   string   `url:"next"`
+}
+
+type GetJobRequest struct {
+	ID string `url:"id"`
 }
 
 type GetJobsResponseWithStatus struct {
@@ -200,11 +201,7 @@ func (c *Client) CreateJob(ctx context.Context, createJobRequest *CreateJobReque
 		return nil, err
 	}
 
-	if res.StatusCode == http.StatusOK {
-		createJobResponseWithStatus.Status = res.StatusCode
-	} else {
-		return nil, fmt.Errorf("%w: received non-ok status code %d: %s", ErrRequestError, res.StatusCode, string(body))
-	}
+	createJobResponseWithStatus.Status = res.StatusCode
 
 	return &createJobResponseWithStatus, nil
 }
@@ -242,11 +239,11 @@ func (c *Client) DeleteManyJobs(ctx context.Context, deleteManyJobsRequest *Dele
 		return nil, err
 	}
 
-	if res.StatusCode == http.StatusOK {
-		deleteManyJobsResponseWithStatus.Status = res.StatusCode
-	} else {
-		return nil, fmt.Errorf("%w: received non-ok status code %d: %s", ErrRequestError, res.StatusCode, string(body))
-	}
+	deleteManyJobsResponseWithStatus.Status = res.StatusCode
 
 	return &deleteManyJobsResponseWithStatus, nil
+}
+
+func (c *Client) GetJob(ctx context.Context, getJobRequest *GetJobRequest) {
+	panic("finish me")
 }
