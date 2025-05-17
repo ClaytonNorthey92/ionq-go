@@ -252,6 +252,80 @@ func TestCreateJobsFailure(t *testing.T) {
 
 	client := NewClient(myFakeEndpoint, myFakeAPIKey)
 	_, err = client.CreateJob(ctx, &CreateJobRequest{})
+	expectRequestError(t, err)
+}
+
+func TestDeleteManyJobsSuccess(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	defer gock.Off()
+
+	var deleteManyJobsResponse DeleteManyJobsResponse
+	if err := gofakeit.Struct(&deleteManyJobsResponse); err != nil {
+		t.Fatal(err)
+	}
+
+	mockJson, err := json.Marshal(&deleteManyJobsResponse)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("will mock response as: %s", mockJson)
+
+	newGock().
+		Delete(jobsPath).
+		Reply(200).
+		JSON(&deleteManyJobsResponse)
+
+	client := NewClient(myFakeEndpoint, myFakeAPIKey)
+	deleteManyJobsResponseWithStatus, err := client.DeleteManyJobs(ctx, &DeleteManyJobsRequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if deleteManyJobsResponseWithStatus.Status != http.StatusOK {
+		t.Fatalf("unexpected status: %d", deleteManyJobsResponseWithStatus.Status)
+	}
+
+	if diff := deep.Equal(deleteManyJobsResponse, deleteManyJobsResponseWithStatus.Response); len(diff) > 0 {
+		t.Fatalf("unexpected diff: %s", diff)
+	}
+}
+
+func TestDeleteManyJobsFailure(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	defer gock.Off()
+
+	var deleteManyJobsResponse DeleteManyJobsResponse
+	if err := gofakeit.Struct(&deleteManyJobsResponse); err != nil {
+		t.Fatal(err)
+	}
+
+	mockJson, err := json.Marshal(&deleteManyJobsResponse)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("will mock response as: %s", mockJson)
+
+	newGock().
+		Delete(jobsPath).
+		Reply(400).
+		JSON(&deleteManyJobsResponse)
+
+	client := NewClient(myFakeEndpoint, myFakeAPIKey)
+	_, err = client.DeleteManyJobs(ctx, &DeleteManyJobsRequest{})
+	expectRequestError(t, err)
+}
+
+func newGock() *gock.Request {
+	return gock.New(myFakeEndpoint).
+		MatchHeader("Authorization", fmt.Sprintf("apiKey %s", myFakeAPIKey)).
+		MatchHeader("Content-Type", "application/json")
+}
+
+func expectRequestError(t *testing.T, err error) {
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -259,10 +333,4 @@ func TestCreateJobsFailure(t *testing.T) {
 	if !errors.Is(err, ErrRequestError) {
 		t.Fatalf("unexpected error: %s", err)
 	}
-}
-
-func newGock() *gock.Request {
-	return gock.New(myFakeEndpoint).
-		MatchHeader("Authorization", fmt.Sprintf("apiKey %s", myFakeAPIKey)).
-		MatchHeader("Content-Type", "application/json")
 }

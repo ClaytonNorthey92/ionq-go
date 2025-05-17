@@ -109,6 +109,20 @@ type CreateJobResponseWithStatus struct {
 	Status   int
 }
 
+type DeleteManyJobsRequest struct {
+	IDs []string `json:"ids"`
+}
+
+type DeleteManyJobsResponse struct {
+	IDS    []string `json:"ids"`
+	Status string   `json:"status"`
+}
+
+type DeleteManyJobsResponseWithStatus struct {
+	Response DeleteManyJobsResponse
+	Status   int
+}
+
 func (c *Client) setHeaders(req *http.Request) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("apiKey %s", c.apiKey))
@@ -193,4 +207,46 @@ func (c *Client) CreateJob(ctx context.Context, createJobRequest *CreateJobReque
 	}
 
 	return &createJobResponseWithStatus, nil
+}
+
+func (c *Client) DeleteManyJobs(ctx context.Context, deleteManyJobsRequest *DeleteManyJobsRequest) (*DeleteManyJobsResponseWithStatus, error) {
+	url := c.makeURL(jobsPath)
+
+	reqBody, err := json.Marshal(deleteManyJobsRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, bytes.NewReader(reqBody))
+	if err != nil {
+		return nil, err
+	}
+
+	c.setHeaders(req)
+
+	res, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var deleteManyJobsResponseWithStatus DeleteManyJobsResponseWithStatus
+
+	if err := json.Unmarshal(body, &deleteManyJobsResponseWithStatus.Response); err != nil {
+		return nil, err
+	}
+
+	if res.StatusCode == http.StatusOK {
+		deleteManyJobsResponseWithStatus.Status = res.StatusCode
+	} else {
+		return nil, fmt.Errorf("%w: received non-ok status code %d: %s", ErrRequestError, res.StatusCode, string(body))
+	}
+
+	return &deleteManyJobsResponseWithStatus, nil
 }
