@@ -21,11 +21,13 @@ func main() {
 
 	target1 := uint(0)
 	target2 := uint(1)
+	target3 := uint(2)
 
 	response, err := client.CreateJob(ctx, &ionq.CreateJobRequest{
 		Input: ionq.JobInput{
+
 			Format: "ionq.circuit.v0",
-			Qubits: 2,
+			Qubits: 3,
 			Circuit: []ionq.CircuitInput{
 				{
 					Gate:   "h",
@@ -35,7 +37,15 @@ func main() {
 					Gate:   "h",
 					Target: &target2,
 				},
+				{
+					Gate:   "h",
+					Target: &target3,
+				},
 			},
+		},
+		Shots: 1000,
+		Noise: &ionq.NoiseInput{
+			Model: "ideal",
 		},
 	})
 
@@ -88,4 +98,10 @@ func main() {
 	}
 
 	fmt.Printf("job output is %v\n", outputResponse.Response)
+
+	for i := range 8 {
+		if outputResponse.Response[fmt.Sprintf("%d", i)] != 0.125 {
+			panic(fmt.Sprintf("unexpected ideal response for %d: %d", i, outputResponse.Response[fmt.Sprintf("%d", i)]))
+		}
+	}
 }
