@@ -72,6 +72,7 @@ type GetJobOutputRequest GetJobRequest
 
 // these have the same structure
 type DeleteJobRequest GetJobRequest
+type CancelJobRequest GetJobRequest
 
 type DeleteJobResponseWithStatus struct {
 	Response DeleteJobResponse
@@ -139,6 +140,16 @@ type DeleteManyJobsResponse struct {
 type DeleteJobResponse struct {
 	ID     string `json:"id"`
 	Status string `json:"status"`
+}
+
+type CancelJobResponse struct {
+	ID     string `json:"id"`
+	Status string `json:"status"`
+}
+
+type CancelJobResponseWithStatus struct {
+	Response CancelJobResponse
+	Status   int
 }
 
 type DeleteManyJobsResponseWithStatus struct {
@@ -367,6 +378,38 @@ func (c *Client) DeleteJob(ctx context.Context, deleteJobRequest *DeleteJobReque
 
 	return &DeleteJobResponseWithStatus{
 		Response: deleteJobResponse,
+		Status:   res.StatusCode,
+	}, nil
+}
+
+func (c *Client) CancelJob(ctx context.Context, cancelJobRequest *CancelJobRequest) (*CancelJobResponseWithStatus, error) {
+	url := c.makeURL(fmt.Sprintf("%s/%s/status/cancel", jobsPath, cancelJobRequest.ID))
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, http.NoBody)
+	if err != nil {
+		return nil, err
+	}
+
+	c.setHeaders(req)
+
+	res, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var cancelJobResponse CancelJobResponse
+	if err := json.Unmarshal(body, &cancelJobResponse); err != nil {
+		return nil, err
+	}
+
+	return &CancelJobResponseWithStatus{
+		Response: cancelJobResponse,
 		Status:   res.StatusCode,
 	}, nil
 }

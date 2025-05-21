@@ -529,3 +529,42 @@ func TestGetJobOutputSuccess(t *testing.T) {
 		t.Fatalf("unexpected diff: %s", diff)
 	}
 }
+
+func TestCancelJobSuccess(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	defer gock.Off()
+
+	jobResponseMock := CancelJobResponse{
+		ID:     "some-id",
+		Status: "canceled",
+	}
+
+	mockJson, err := json.Marshal(&jobResponseMock)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("will mock response as: %s", mockJson)
+
+	newGock().
+		Put(fmt.Sprintf("%s/some-id/status/cancel", jobsPath)).
+		Reply(200).
+		JSON(&jobResponseMock)
+
+	client := NewClient(myFakeEndpoint, myFakeAPIKey)
+	jobResponseWithStatus, err := client.CancelJob(ctx, &CancelJobRequest{
+		ID: "some-id",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if jobResponseWithStatus.Status != http.StatusOK {
+		t.Fatalf("unexpected status: %d", jobResponseWithStatus.Status)
+	}
+
+	if diff := deep.Equal(jobResponseMock, jobResponseWithStatus.Response); len(diff) > 0 {
+		t.Fatalf("unexpected diff: %s", diff)
+	}
+}
