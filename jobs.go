@@ -91,31 +91,39 @@ type GetJobsResponseWithStatus struct {
 	Status   int
 }
 
+type CircuitInput struct {
+	Gate     string `json:"gate,omitempty"`
+	Target   *uint  `json:"target,omitempty"`
+	Targets  []uint `json:"targets,omitempty`
+	Control  uint   `json:"control,omitempty"`
+	Controls []uint `json:"controls,omitempty"`
+	Rotation int    `json:"rotation,omitempty"`
+}
+
+type JobInput struct {
+	Circuit []CircuitInput `json:"circuit,omitempty"`
+	Qubits  uint           `json:"qubits"`
+	Format  string         `json:"format,omitempty"`
+	Gateset string         `json:"gateset,omitempty"`
+}
+
+type NoiseInput struct {
+	Model string `json:"model,omitempty"`
+	Seed  int    `json:"seed,omitempty"`
+}
+
+type ErrorMitigationInput struct {
+	Debias bool `json:"debias,omitempty"`
+}
+
 type CreateJobRequest struct {
-	Name     string            `json:"name,omitempty"`
-	Metadata map[string]string `json:"metadata,omitempty"`
-	Shots    uint              `json:"shots,omitempty"`
-	Target   string            `json:"target,omitempty"`
-	Noise    struct {
-		Model string `json:"model,omitempty"`
-		Seed  int    `json:"seed,omitempty"`
-	} `json:"noise,omitempty"`
-	Input struct {
-		Circuit struct {
-			Gate     string `json:"gate,omitempty"`
-			Target   uint   `json:"target,omitempty"`
-			Targets  []uint `json:"targets,omitempty`
-			Control  uint   `json:"control,omitempty"`
-			Controls []uint `json:"controls,omitempty"`
-			Rotation int    `json:"rotation,omitempty"`
-		} `json:"circuit,omitempty"`
-		Qubits  uint   `json:"qubits"`
-		Format  string `json:"format,omitempty"`
-		Gateset string `json:"gateset,omitempty"`
-	} `json:"input,omitempty"`
-	ErrorMitigation struct {
-		Debias bool `json:"debias,omitempty"`
-	} `json:"error_mitigation,omitempty"`
+	Name            string                `json:"name,omitempty"`
+	Metadata        map[string]string     `json:"metadata,omitempty"`
+	Shots           uint                  `json:"shots,omitempty"`
+	Target          string                `json:"target,omitempty"`
+	Noise           *NoiseInput           `json:"noise,omitempty"`
+	Input           JobInput              `json:"input,omitempty"`
+	ErrorMitigation *ErrorMitigationInput `json:"error_mitigation,omitempty"`
 }
 
 type CreateJobResponse struct {
@@ -157,7 +165,7 @@ type DeleteManyJobsResponseWithStatus struct {
 	Status   int
 }
 
-type GetJobOutputResponse map[string]map[string]float32
+type GetJobOutputResponse map[string]float32
 
 type GetJobOutputResponseWithStatus struct {
 	Response GetJobOutputResponse
@@ -319,7 +327,7 @@ func (c *Client) GetJob(ctx context.Context, getJobRequest *GetJobRequest) (*Get
 }
 
 func (c *Client) GetJobOutput(ctx context.Context, getJobOutputRequest *GetJobOutputRequest) (*GetJobOutputResponseWithStatus, error) {
-	url := c.makeURL(fmt.Sprintf("%s/%s/output", jobsPath, getJobOutputRequest.ID))
+	url := c.makeURL(fmt.Sprintf("%s/%s/results", jobsPath, getJobOutputRequest.ID))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 	if err != nil {

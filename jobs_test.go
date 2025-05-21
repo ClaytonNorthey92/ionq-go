@@ -491,15 +491,9 @@ func TestGetJobOutputSuccess(t *testing.T) {
 	defer gock.Off()
 
 	jobResponseMock := GetJobOutputResponse{
-		"someid": map[string]float32{
-			"0": 0.8,
-			"1": 0.2,
-		},
-		"someotherid": map[string]float32{
-			"0": 0.2,
-			"1": 0.4,
-			"2": 0.4,
-		},
+		"0": 0.2,
+		"1": 0.4,
+		"2": 0.4,
 	}
 
 	mockJson, err := json.Marshal(&jobResponseMock)
@@ -509,7 +503,7 @@ func TestGetJobOutputSuccess(t *testing.T) {
 	t.Logf("will mock response as: %s", mockJson)
 
 	newGock().
-		Get(fmt.Sprintf("%s/some-id/output", jobsPath)).
+		Get(fmt.Sprintf("%s/some-id/results", jobsPath)).
 		Reply(200).
 		JSON(&jobResponseMock)
 
