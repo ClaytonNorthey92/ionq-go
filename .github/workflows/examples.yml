@@ -20,6 +20,8 @@ jobs:
       - name: Display Go version
         run: go version
       - name: Run Example 1
+        env:
+          IONQ_API_KEY: ${{ secrets.IONQ_API_KEY }}
         run: go run ./...
         working-directory: ./examples/create-small-job
 
