@@ -177,6 +177,8 @@ func (c *Client) setHeaders(req *http.Request) {
 	req.Header.Set("Authorization", fmt.Sprintf("apiKey %s", c.apiKey))
 }
 
+// GetJobs retrieves a list of jobs from the IonQ API and returns the response
+// according to the API documentation.
 func (c *Client) GetJobs(ctx context.Context, getJobsRequest *GetJobsRequest) (*GetJobsResponseWithStatus, error) {
 	url := c.makeURL(jobsPath)
 
@@ -216,6 +218,8 @@ func (c *Client) GetJobs(ctx context.Context, getJobsRequest *GetJobsRequest) (*
 	}, nil
 }
 
+// CreateJob creates a new job in the IonQ API and returns the response according
+// to the API documentation.
 func (c *Client) CreateJob(ctx context.Context, createJobRequest *CreateJobRequest) (*CreateJobResponseWithStatus, error) {
 	url := c.makeURL(jobsPath)
 
@@ -254,6 +258,8 @@ func (c *Client) CreateJob(ctx context.Context, createJobRequest *CreateJobReque
 	return &createJobResponseWithStatus, nil
 }
 
+// DeleteManyJobs deletes multiple jobs in the IonQ API and returns the response
+// according to the API documentation.
 func (c *Client) DeleteManyJobs(ctx context.Context, deleteManyJobsRequest *DeleteManyJobsRequest) (*DeleteManyJobsResponseWithStatus, error) {
 	url := c.makeURL(jobsPath)
 
@@ -292,6 +298,8 @@ func (c *Client) DeleteManyJobs(ctx context.Context, deleteManyJobsRequest *Dele
 	return &deleteManyJobsResponseWithStatus, nil
 }
 
+// GetJob retrieves a job from the IonQ API and returns the response according
+// to the API documentation.
 func (c *Client) GetJob(ctx context.Context, getJobRequest *GetJobRequest) (*GetJobResponseWithStatus, error) {
 	url := c.makeURL(fmt.Sprintf("%s/%s", jobsPath, getJobRequest.ID))
 
@@ -326,6 +334,8 @@ func (c *Client) GetJob(ctx context.Context, getJobRequest *GetJobRequest) (*Get
 	}, nil
 }
 
+// GetJobOutput retrieves the output of a job from the IonQ API and returns the
+// response according to the API documentation.
 func (c *Client) GetJobOutput(ctx context.Context, getJobOutputRequest *GetJobOutputRequest) (*GetJobOutputResponseWithStatus, error) {
 	url := c.makeURL(fmt.Sprintf("%s/%s/results", jobsPath, getJobOutputRequest.ID))
 
@@ -358,6 +368,8 @@ func (c *Client) GetJobOutput(ctx context.Context, getJobOutputRequest *GetJobOu
 	}, nil
 }
 
+// DeleteJob deletes a job with the IonQ API and returns the response
+// according to the API documentation.
 func (c *Client) DeleteJob(ctx context.Context, deleteJobRequest *DeleteJobRequest) (*DeleteJobResponseWithStatus, error) {
 	url := c.makeURL(fmt.Sprintf("%s/%s", jobsPath, deleteJobRequest.ID))
 
@@ -390,6 +402,8 @@ func (c *Client) DeleteJob(ctx context.Context, deleteJobRequest *DeleteJobReque
 	}, nil
 }
 
+// CancelJob cancels a job with the IonQ API and returns the response
+// according to the API documentation.
 func (c *Client) CancelJob(ctx context.Context, cancelJobRequest *CancelJobRequest) (*CancelJobResponseWithStatus, error) {
 	url := c.makeURL(fmt.Sprintf("%s/%s/status/cancel", jobsPath, cancelJobRequest.ID))
 
